@@ -39,6 +39,7 @@ def main():
 
             responsible = {
                 "id":"",
+                "unique_id":people_email,
                 "firstname":people_name,
                 "lastname":"",
                 "email":people_email,
@@ -46,11 +47,18 @@ def main():
                 "community":people_community
             }
 
+            if(responsible["unique_id"] is None):
+                responsible["unique_id"] = responsible["phone"]
+
             species = {
                 "id":"",
                 "name":species_name,
+                "scientific_name":species_name,
                 "alias":species_name,
                 "description":species_name,
+                "leaf_type":species_name,
+                "water_requirements":species_name,
+                "sun_exposure":species_name,
                 "image_url":species_name
             }
 
@@ -59,14 +67,15 @@ def main():
                 "code":specimen_code,
                 "map_code":specimen_map_code,
                 "plant_date":specimen_plant_date,
+                "irrigation_date":specimen_plant_date,
                 "species_id":""
             }
 
 
             # Insert species
             try:
-                sql_input = """INSERT INTO `plants_species` (`id`, `name`, `alias`, `description`, `image_url`) VALUES (NULL, '{}', '{}', '{}', '{}');"""
-                sql_input = sql_input.format(species["name"], species["alias"], species["description"], species["image_url"])
+                sql_input = """INSERT INTO `plants_species` (`id`, `name`, `scientific_name`, `alias`, `description`, `leaf_type`, `water_requirements`, `sun_exposure`, `image_url`) VALUES (NULL, '{}', '{}', '{}', '{}', '{}', '{}', '{}', '{}');"""
+                sql_input = sql_input.format(species["name"], species["scientific_name"], species["alias"], species["description"], species["leaf_type"], species["water_requirements"], species["sun_exposure"], species["image_url"])
                 x.execute(sql_input)
                 conn.commit()
                 # print("Inserted: "+species["name"])
@@ -92,16 +101,16 @@ def main():
 
             #Insert specimen
             try:
-                sql_input = "INSERT INTO `plants_specimen` (`id`, `code`, `map_code`, `plant_date`, `species_id`) VALUES (NULL, '{}', '{}', CURRENT_DATE(), '{}');"
-                sql_input = sql_input.format(specimen["code"], specimen["map_code"], species_id)
+                sql_input = "INSERT INTO `plants_specimen` (`id`, `code`, `map_code`, `plant_date`, `irrigation_date`, `species_id`) VALUES (NULL, '{}', '{}', '{}', '{}', '{}');"
+                sql_input = sql_input.format(specimen["code"], specimen["map_code"], specimen["plant_date"], specimen["irrigation_date"], species_id)
                 # print(sql_input)
                 x.execute(sql_input)
                 conn.commit()
-                # print("Inserted: "+specimen["code"])
+                print("UPLOADED SPECIMEN: "+specimen["code"])
             except Exception as e:
                 conn.rollback()
                 # print("error")
-                # print(e)
+                print(e)
 
             responsible_id = None
 
@@ -109,28 +118,24 @@ def main():
 
             #insert Responsible
             try:
-                sql_input = "INSERT INTO `people_responsible` (`id`, `firstname`, `lastname`, `email`, `phone`) VALUES (NULL, '{}', '{}', '{}', '{}');".format(responsible["firstname"], responsible["firstname"], responsible["email"], responsible["phone"])
+                sql_input = "INSERT INTO `people_responsible` (`id`, `unique_id`, `firstname`, `lastname`, `email`, `phone`) VALUES (NULL, '{}', '{}', '{}', '{}', '{}');".format(responsible["firstname"], responsible["unique_id"], responsible["firstname"], responsible["email"], responsible["phone"])
                 x.execute(sql_input)
                 conn.commit()
                 # responsible_id = x.lastrowid
-                # print("Inserted: "+specimen["code"])
+                print("UPLOADED RESPONSIBLE: "+responsible["firstname"])
             except Exception as e:
                 conn.rollback()
-                # print("error")
-                # print(e)
+                print(e)
 
 
             try:
                 sql_input = "SELECT * FROM people_responsible WHERE people_responsible.email = '{}'".format(responsible["email"])
-                # print(sql_input)
                 x.execute(sql_input)
                 sql_row = x.fetchone()
 
                 responsible_id = sql_row[0]
-                # print(sql_row)
 
             except Exception as e:
-                # print(e)
                 conn.rollback()
 
             # print(responsible_id)
