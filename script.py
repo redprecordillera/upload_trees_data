@@ -10,7 +10,6 @@ conn = MySQLdb.connect(
     )
 x = conn.cursor()
 
-
 def main():
 
     with open("backup.csv", 'rt') as input:
@@ -106,39 +105,70 @@ def main():
                 # print(sql_input)
                 x.execute(sql_input)
                 conn.commit()
+
                 print("UPLOADED SPECIMEN: "+specimen["code"])
             except Exception as e:
                 conn.rollback()
                 # print("error")
                 print(e)
 
+            specimen_id = None
             responsible_id = None
 
-            #Get responsible
-
-            #insert Responsible
+            # Get specimen
             try:
-                sql_input = "INSERT INTO `people_responsible` (`id`, `unique_id`, `firstname`, `lastname`, `email`, `phone`) VALUES (NULL, '{}', '{}', '{}', '{}', '{}');".format(responsible["firstname"], responsible["unique_id"], responsible["firstname"], responsible["email"], responsible["phone"])
-                x.execute(sql_input)
-                conn.commit()
-                # responsible_id = x.lastrowid
-                print("UPLOADED RESPONSIBLE: "+responsible["firstname"])
-            except Exception as e:
-                conn.rollback()
-                print(e)
-
-
-            try:
-                sql_input = "SELECT * FROM people_responsible WHERE people_responsible.email = '{}'".format(responsible["email"])
+                sql_input = "SELECT * FROM plants_specimen WHERE plants_specimen.code = '{}'".format(specimen["code"])
                 x.execute(sql_input)
                 sql_row = x.fetchone()
-
-                responsible_id = sql_row[0]
+                while sql_row is not None:
+                  specimen_id = sql_row[0]
+                  sql_row = x.fetchone()
 
             except Exception as e:
-                conn.rollback()
+                print(e)
+                # conn.rollback()
 
-            # print(responsible_id)
+            #insert Responsible
+            if responsible["unique_id"]:
+                try:
+                    sql_input = "INSERT INTO `people_responsible` (`id`, `unique_id`, `firstname`, `lastname`, `email`, `phone`) VALUES (NULL, '{}', '{}', '{}', '{}', '{}');"
+                    sql_input = sql_input.format(responsible["unique_id"], responsible["firstname"], responsible["lastname"], responsible["email"], responsible["phone"])
+                    x.execute(sql_input)
+                    conn.commit()
+                    # responsible_id = x.lastrowid
+                    print("UPLOADED RESPONSIBLE: "+responsible["firstname"])
+                except Exception as e:
+                    conn.rollback()
+                    print(e)
+
+                #Get responsible
+                try:
+                    sql_input = "SELECT * FROM people_responsible WHERE people_responsible.unique_id = '{}'".format(responsible["unique_id"])
+                    x.execute(sql_input)
+                    sql_row = x.fetchone()
+
+                    if sql_row[1] is not None:
+                        responsible_id = sql_row[0]
+                    else:
+                        print("none")
+
+                except Exception as e:
+                    conn.rollback()
+
+                # insert Responsible specimen asociation
+                try:
+                    sql_input = "INSERT INTO `people_responsible_specimens` (`id`, `responsible_id`, `specimen_id`) VALUES (NULL, '{}', '{}');"
+                    sql_input = sql_input.format(responsible_id, specimen_id)
+                    x.execute(sql_input)
+                    conn.commit()
+                    # responsible_id = x.lastrowid
+                    print("LINKED {}<-->{}".format(responsible_id, specimen_id))
+                except Exception as e:
+                    conn.rollback()
+                    print(e)
+
+            print(responsible_id)
+            print(specimen_id)
 
     conn.close()
 
