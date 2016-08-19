@@ -12,7 +12,7 @@ x = conn.cursor()
 
 def main():
 
-    with open("backup.csv", 'rt') as input:
+    with open("input.csv", 'rt') as input:
         reader = csv.reader(input, delimiter = ',')
 
         all = []
@@ -34,7 +34,7 @@ def main():
             specimen_map_code   = row[0]
             specimen_location   = row[6]
             specimen_plant_date = row[7]
-            specimen_code       = row[8]
+            specimen_code       = row[9]
 
             responsible = {
                 "id":"",
